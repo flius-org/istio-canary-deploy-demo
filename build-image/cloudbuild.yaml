@@ -1,9 +1,9 @@
 tags:
-  - gaming-ci-cd-platform
+  - canary-deploy-demo
 steps:
 - name: 'gcr.io/kaniko-project/executor:latest'
-  id: 'build-installer-image'
+  id: 'build-base-image'
   args:
-  - --destination=gcr.io/${_PROJECT_ID}/gaming-ci-cd-platform-installer
+  - --destination=gcr.io/${_PROJECT_ID}/canary-deploy-demo-base
   - --cache=true
   - --cache-ttl=12h
