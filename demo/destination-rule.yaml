@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: hello-app-dr
+spec:
+  host: hello-app-svc
+  subsets:
+  - name: v1
+    labels:
+      version: 220701-173838
+  - name: v2
+    labels:
+      version: 220701-173838

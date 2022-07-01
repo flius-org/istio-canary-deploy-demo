@@ -1,0 +1,52 @@
+#deploy v1
+export PROJECT_ID=flius-vpc-2
+export TAG_NAME=$(date +%y%m%d-%H%M%S)
+gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=${TAG_NAME}
+
+export HELLO_APP_V1_VERSION=${TAG_NAME}
+export HELLO_APP_V1_IMAGE=gcr.io/${PROJECT_ID}/hello-app:${HELLO_APP_V1_VERSION}
+
+
+#deploy v2
+export PROJECT_ID=flius-vpc-2
+export TAG_NAME=$(date +%y%m%d-%H%M%S)
+gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=${TAG_NAME}
+
+export HELLO_APP_V2_VERSION=${TAG_NAME}
+export HELLO_APP_V2_IMAGE=gcr.io/${PROJECT_ID}/hello-app:${HELLO_APP_V2_VERSION}
+
+cat hello-app-deployment-v2.yaml.tpl| envsubst > demo/hello-app-deployment-v2.yaml
+cat destination-rule.yaml.tpl| envsubst > demo/destination-rule.yaml
+cp vs-90-10.yaml demo/
+cp vs-50-50.yaml demo/
+cp vs-10-90.yaml demo/
+
+kubectl apply -f demo/destination-rule.yaml
+kubectl apply -f vs-90-10.yaml
+
+#canary deploy
+export HELLO_APP_V1_VERSION=$(kubectl get destinationrules hello-app-dr -ojson | jq -r .spec.subsets[0].labels.version)
+export TAG_NAME=$(date +%y%m%d-%H%M%S)
+export HELLO_APP_V2_VERSION=${TAG_NAME}
+export HELLO_APP_V2_IMAGE=gcr.io/${PROJECT_ID}/hello-app:${HELLO_APP_V2_VERSION}
+
+#modify main.go
+cat main.go.tpl| envsubst > golang-template/main.go
+
+gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=${TAG_NAME}
+
+cat destination-rule.yaml.tpl| envsubst > demo/destination-rule.yaml
+cat hello-app-deployment-v2.yaml.tpl| envsubst > demo/hello-app-deployment-v2.yaml
+
+kubectl apply -f demo/hello-app-deployment-v2.yaml
+kubectl apply -f demo/destination-rule.yaml
+kubectl apply -f demo/vs-90-10.yaml
+kubectl apply -f demo/vs-50-50.yaml
+kubectl apply -f demo/vs-10-90.yaml
+
+# very important
+cat destination-rule-single-svc.yaml.tpl| envsubst > demo/destination-rule.yaml
+kubectl apply -f demo/destination-rule.yaml
+kubectl apply -f demo/vs-100-0.yaml
+
+kubectl delete deploy hello-app-deployment-${HELLO_APP_V1_VERSION}

@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: hello-app-vs
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - hello-world-gateway 
+  http:
+  - route:
+    - destination:
+        host: hello-app-svc
+        subset: v1
+      weight: 100
+    - destination:
+        host: hello-app-svc
+        subset: v2
+      weight: 0
