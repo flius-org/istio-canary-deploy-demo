@@ -10,20 +10,23 @@ options:
   substitution_option: 'ALLOW_LOOSE'
 steps:
 - name: "gcr.io/cloud-builders/gcloud"
-  id: "build-install-image"
+  id: "build-base-image"
   entrypoint: bash
   args:
     - -c
     - |
       gcloud builds submit --config=build-image/cloudbuild.yaml --substitutions=_PROJECT_ID=${_PROJECT_ID}
 
-- name: "gcr.io/${_PROJECT_ID}/canary-deploy-demo-installer"
+- name: "gcr.io/${_PROJECT_ID}/canary-deploy-demo-base"
   id: "canary-deploy-demo"
   entrypoint: 'bash'
   args:
     - '-c'
     - |
+      git clone https://github.com/flius-org/istio-canary-deploy-demo.git
+      cd istio-canary-deploy-demo
       gcloud container clusters get-credentials ${_CLUSTER_NAME} --region ${_GCP_REGION}
+
       #canary deploy
       export HELLO_APP_V1_VERSION=$(kubectl get destinationrules hello-app-dr -ojson | jq -r .spec.subsets[0].labels.version)
       export TAG_NAME=$(date +%y%m%d-%H%M%S)
@@ -33,8 +36,10 @@ steps:
       #modify main.go
       cat main.go.tpl| envsubst > golang-template/main.go
 
+      cd golang-template
       gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=${TAG_NAME}
 
+      cd ..
       cat destination-rule.yaml.tpl| envsubst > demo/destination-rule.yaml
       cat hello-app-deployment-v2.yaml.tpl| envsubst > demo/hello-app-deployment-v2.yaml
 
@@ -51,7 +56,7 @@ steps:
 
       kubectl delete deploy hello-app-deployment-${HELLO_APP_V1_VERSION}
   waitFor:
-    - build-install-image
+    - build-base-image
 
 # - name: gcr.io/google.com/cloudsdktool/cloud-sdk
 #   id: "cloud-deploy"
