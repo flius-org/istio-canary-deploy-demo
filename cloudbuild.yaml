@@ -9,13 +9,13 @@ substitutions:
 options:
   substitution_option: 'ALLOW_LOOSE'
 steps:
-# - name: "gcr.io/cloud-builders/gcloud"
-#   id: "build-base-image"
-#   entrypoint: bash
-#   args:
-#     - -c
-#     - |
-#       gcloud builds submit --config=build-image/cloudbuild.yaml --substitutions=_PROJECT_ID=${_PROJECT_ID}
+- name: "gcr.io/cloud-builders/gcloud"
+  id: "build-base-image"
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      gcloud builds submit --config=build-image/cloudbuild.yaml --substitutions=_PROJECT_ID=${_PROJECT_ID}
 
 - name: "gcr.io/${_PROJECT_ID}/canary-deploy-demo-base"
   id: "canary-deploy-demo"
@@ -29,9 +29,8 @@ steps:
       export GCP_ZONE=${_GCP_ZONE}
       export PROJECT_ID=${_PROJECT_ID}
       ./run-canary-deploy.sh
-
-  # waitFor:
-  #   - build-base-image
+  waitFor:
+    - build-base-image
 
 # - name: gcr.io/google.com/cloudsdktool/cloud-sdk
 #   id: "cloud-deploy"
