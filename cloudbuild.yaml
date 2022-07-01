@@ -54,7 +54,7 @@ steps:
       kubectl apply -f demo/destination-rule.yaml
       kubectl apply -f demo/vs-100-0.yaml
 
-      kubectl delete deploy hello-app-deployment-${HELLO_APP_V1_VERSION}
+      kubectl delete deploy hello-app-deployment-$${HELLO_APP_V1_VERSION}
   waitFor:
     - build-base-image
 
