@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-app-deployment-${HELLO_APP_V2_VERSION}
+  name: hello-app-deployment-$${HELLO_APP_V2_VERSION}
 spec:
   selector:
     matchLabels:
