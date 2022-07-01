@@ -3,7 +3,7 @@ tags:
   - canary-deploy-demo
 substitutions:
   _PROJECT_ID: ${PROJECT_ID}
-  _GCP_REGION: ${GCP_REGION}
+  _GCP_ZONE: ${GCP_ZONE}
   _CLUSTER_NAME: ${CLUSTER_NAME}
 
 options:
@@ -25,7 +25,7 @@ steps:
     - |
       git clone https://github.com/flius-org/istio-canary-deploy-demo.git
       cd istio-canary-deploy-demo
-      gcloud container clusters get-credentials ${_CLUSTER_NAME} --region ${_GCP_REGION}
+      gcloud container clusters get-credentials ${_CLUSTER_NAME} --zone ${_GCP_ZONE}
 
       #canary deploy
       export HELLO_APP_V1_VERSION=$(kubectl get destinationrules hello-app-dr -ojson | jq -r .spec.subsets[0].labels.version)
