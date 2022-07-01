@@ -9,13 +9,13 @@ substitutions:
 options:
   substitution_option: 'ALLOW_LOOSE'
 steps:
-- name: "gcr.io/cloud-builders/gcloud"
-  id: "build-base-image"
-  entrypoint: bash
-  args:
-    - -c
-    - |
-      gcloud builds submit --config=build-image/cloudbuild.yaml --substitutions=_PROJECT_ID=${_PROJECT_ID}
+# - name: "gcr.io/cloud-builders/gcloud"
+#   id: "build-base-image"
+#   entrypoint: bash
+#   args:
+#     - -c
+#     - |
+#       gcloud builds submit --config=build-image/cloudbuild.yaml --substitutions=_PROJECT_ID=${_PROJECT_ID}
 
 - name: "gcr.io/${_PROJECT_ID}/canary-deploy-demo-base"
   id: "canary-deploy-demo"
@@ -28,16 +28,19 @@ steps:
       gcloud container clusters get-credentials ${_CLUSTER_NAME} --zone ${_GCP_ZONE}
 
       #canary deploy
-      export HELLO_APP_V1_VERSION=$(kubectl get destinationrules hello-app-dr -ojson | jq -r .spec.subsets[0].labels.version)
-      export TAG_NAME=$(date +%y%m%d-%H%M%S)
-      export HELLO_APP_V2_VERSION=${TAG_NAME}
-      export HELLO_APP_V2_IMAGE=gcr.io/${PROJECT_ID}/hello-app:$${HELLO_APP_V2_VERSION}
+      HELLO_APP_V1_VERSION=$(kubectl get destinationrules hello-app-dr -ojson | jq -r .spec.subsets[0].labels.version)
+      echo $$HELLO_APP_V1_VERSION
+      TAG_NAME=$(date +%y%m%d-%H%M%S)
+      HELLO_APP_V2_VERSION=$${TAG_NAME}
+      echo $$HELLO_APP_V2_VERSION
+
+      HELLO_APP_V2_IMAGE=gcr.io/${PROJECT_ID}/hello-app:$${HELLO_APP_V2_VERSION}
 
       #modify main.go
       cat main.go.tpl| envsubst > golang-template/main.go
 
       cd golang-template
-      gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=${TAG_NAME}
+      gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=$${TAG_NAME}
 
       cd ..
       cat destination-rule.yaml.tpl| envsubst > demo/destination-rule.yaml
@@ -54,9 +57,9 @@ steps:
       kubectl apply -f demo/destination-rule.yaml
       kubectl apply -f demo/vs-100-0.yaml
 
-      kubectl delete deploy hello-app-deployment-$${HELLO_APP_V1_VERSION}
-  waitFor:
-    - build-base-image
+      # kubectl delete deploy hello-app-deployment-$${HELLO_APP_V1_VERSION}
+  # waitFor:
+  #   - build-base-image
 
 # - name: gcr.io/google.com/cloudsdktool/cloud-sdk
 #   id: "cloud-deploy"
