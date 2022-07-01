@@ -12,10 +12,11 @@ steps:
 - name: "gcr.io/cloud-builders/gcloud"
   id: "build-base-image"
   entrypoint: bash
+  dir: "build-image"
   args:
     - -c
     - |
-      gcloud builds submit --config=build-image/cloudbuild.yaml --substitutions=_PROJECT_ID=${_PROJECT_ID}
+      gcloud builds submit --substitutions=_PROJECT_ID=${_PROJECT_ID}
 
 - name: "gcr.io/${_PROJECT_ID}/canary-deploy-demo-base"
   id: "canary-deploy-demo"
@@ -28,6 +29,7 @@ steps:
       export CLUSTER_NAME=${_CLUSTER_NAME}
       export GCP_ZONE=${_GCP_ZONE}
       export PROJECT_ID=${_PROJECT_ID}
+
       ./run-canary-deploy.sh
   waitFor:
     - build-base-image
