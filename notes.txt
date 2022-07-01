@@ -6,7 +6,6 @@ gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},TAG_NAME=${TAG_NA
 export HELLO_APP_V1_VERSION=${TAG_NAME}
 export HELLO_APP_V1_IMAGE=gcr.io/${PROJECT_ID}/hello-app:${HELLO_APP_V1_VERSION}
 
-
 #deploy v2
 export PROJECT_ID=flius-vpc-2
 export TAG_NAME=$(date +%y%m%d-%H%M%S)
@@ -50,3 +49,5 @@ kubectl apply -f demo/destination-rule.yaml
 kubectl apply -f demo/vs-100-0.yaml
 
 kubectl delete deploy hello-app-deployment-${HELLO_APP_V1_VERSION}
+
+gcloud builds submit --substitutions=_PROJECT_ID=${PROJECT_ID},_GCP_ZONE=us-central1-c,_CLUSTER_NAME=istio-cluster
